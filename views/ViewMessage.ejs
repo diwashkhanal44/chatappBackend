@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Messages</title>
+    <style>
+        body {
+            font-family: sans-serif;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        .messages {
+            border: 1px solid #ddd;
+            padding: 10px;
+            height: 300px;
+            overflow-y: scroll;
+        }
+
+        .message-box {
+            margin-bottom: 10px;
+            padding: 10px;
+            border: 1px solid #eee;
+            border-radius: 5px;
+            background-color: #f5f5f5;
+        }
+
+        .message-timestamp {
+            font-size: 0.8em;
+            color: #999;
+        }
+
+        .message-username {
+            font-weight: bold;
+        }
+    </style>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            const fetchMessages = () => {
+                $.get('/chat', function(data) {
+                    // Clear existing messages
+                    $('div.messages').empty();
+
+                    // Append all messages to the chat view
+                    if (data && data.length > 0) {
+                        data.forEach(message => {
+                            const messageBox = $(`
+                                <div class="message-box">
+                                    <p class="message-timestamp">${message.timestamp}</p>
+                                    <p class="message-username">${message.username}:</p>
+                                    <p class="message-content">${message.message}</p>
+                                </div>
+                            `);
+                            $('div.messages').append(messageBox);
+                        });
+                    } else {
+                        $('div.messages').append('<p>No messages yet.</p>');
+                    }
+                });
+            };
+
+            // Initial fetch of messages
+            fetchMessages();
+
+            // Poll for new messages every 5 seconds
+            setInterval(fetchMessages, 1000);
+
+            $('form').submit(function(event) {
+                event.preventDefault(); // Prevent the form from submitting through the browser
+
+                var formData = $(this).serialize(); // Serialize the form data
+
+                $.post('/chat', formData, function(data) {
+                    $('textarea[name="message"]').val(''); // Clear the input
+                    fetchMessages(); // Fetch all messages to refresh the view
+                }).fail(function() {
+                    alert('Error sending message.');
+                });
+            });
+        });
+    </script>
+</head>
+<body>
+    <h1>Chat Messages</h1>
+    <div class="messages">
+        <p>No messages yet.</p>
+    </div>
+
+    <h2>Reply to Messages</h2>
+    <form action="/chat" method="POST">
+        <input type="hidden" name="id" value="1"> 
+        <input type="hidden" name="username" value="server"> 
+        <textarea name="message" rows="4" cols="50" placeholder="Type your reply here..."></textarea>
+        <br>
+        <button type="submit">Send Reply</button>
+    </form>
+</body>
+</html>
