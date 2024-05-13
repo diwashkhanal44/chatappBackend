@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title><%= groupName %></title>
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+</head>
+<body>
+    <h1>Group Name: <%= groupName %></h1>
+    <!h2>Group ID: <%= groupId %><!/h2>
+    <h3>Messages</h3>
+    <ul>
+        <% messages.forEach(function(message) { %>
+            <li><strong><%= message.username %>:</strong> <%= message.message %> - <%= message.timestamp %></li>
+        <% }); %>
+    </ul>
+</body>
+</html>

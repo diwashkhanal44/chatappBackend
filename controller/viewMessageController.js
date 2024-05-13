@@ -5,7 +5,7 @@ const readFileAsync = promisify(fs.readFile);
 
 const viewMessageController = async function(req, res, next) {
     try {
-        const data = await readFileAsync('public/json/message.json', 'utf8');
+        const data = await readFileAsync('json/message.json', 'utf8');
         
         if (!data.trim()) {
             console.log('No data found in the file.');
