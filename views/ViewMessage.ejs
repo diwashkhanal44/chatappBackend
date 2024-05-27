@@ -4,9 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chat Messages</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
     <style>
         body {
             font-family: sans-serif;
+            margin: 20px;
         }
 
         h1 {
@@ -36,53 +38,31 @@
         .message-username {
             font-weight: bold;
         }
+
+        form {
+            display: flex;
+            margin-top: 20px;
+        }
+
+        textarea {
+            flex-grow: 1;
+            margin-right: 10px;
+        }
+
+        button {
+            width: 100px;
+            height: 50px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
     </style>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-    <script>
-        $(document).ready(function() {
-            const fetchMessages = () => {
-                $.get('/chat', function(data) {
-                    // Clear existing messages
-                    $('div.messages').empty();
-
-                    // Append all messages to the chat view
-                    if (data && data.length > 0) {
-                        data.forEach(message => {
-                            const messageBox = $(`
-                                <div class="message-box">
-                                    <p class="message-timestamp">${message.timestamp}</p>
-                                    <p class="message-username">${message.username}:</p>
-                                    <p class="message-content">${message.message}</p>
-                                </div>
-                            `);
-                            $('div.messages').append(messageBox);
-                        });
-                    } else {
-                        $('div.messages').append('<p>No messages yet.</p>');
-                    }
-                });
-            };
-
-            // Initial fetch of messages
-            fetchMessages();
-
-            // Poll for new messages every 5 seconds
-            setInterval(fetchMessages, 1000);
-
-            $('form').submit(function(event) {
-                event.preventDefault(); // Prevent the form from submitting through the browser
-
-                var formData = $(this).serialize(); // Serialize the form data
-
-                $.post('/chat', formData, function(data) {
-                    $('textarea[name="message"]').val(''); // Clear the input
-                    fetchMessages(); // Fetch all messages to refresh the view
-                }).fail(function() {
-                    alert('Error sending message.');
-                });
-            });
-        });
-    </script>
 </head>
 <body>
     <h1>Chat Messages</h1>
@@ -91,12 +71,51 @@
     </div>
 
     <h2>Reply to Messages</h2>
-    <form action="/chat" method="POST">
-        <input type="hidden" name="id" value="1"> 
-        <input type="hidden" name="username" value="server"> 
-        <textarea name="message" rows="4" cols="50" placeholder="Type your reply here..."></textarea>
-        <br>
-        <button type="submit">Send Reply</button>
+    <form action="#" method="POST">
+        <input type="hidden" name="username" value="User"> <!-- Adjust this value as necessary -->
+        <textarea name="message" rows="2" placeholder="Type your reply here..."></textarea>
+        <button type="submit"><i class="fas fa-paper-plane"></i> Send</button>
     </form>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            var socket = io();
+
+            // Receive existing and new messages
+            socket.on('existing_messages', function(messages) {
+                $('div.messages').empty();
+                messages.forEach(addMessageToDisplay);
+            });
+
+            socket.on('receive_message', function(message) {
+                addMessageToDisplay(message);
+            });
+
+            function addMessageToDisplay(message) {
+                const messageBox = $(`
+                    <div class="message-box">
+                        <p class="message-timestamp">${new Date(message.timestamp).toLocaleTimeString()}</p>
+                        <p class="message-username">${message.username}:</p>
+                        <p>${message.message}</p>
+                    </div>
+                `);
+                $('div.messages').append(messageBox);
+            }
+
+            $('form').submit(function(event) {
+                event.preventDefault();
+                var message = {
+                    timestamp: new Date().toISOString(),
+                    username: $('input[name="username"]').val(),
+                    message: $('textarea[name="message"]').val()
+                };
+
+                socket.emit('new_message', message);
+                $('textarea[name="message"]').val('');
+            });
+        });
+    </script>
 </body>
 </html>

@@ -34,7 +34,7 @@ const chatpageController = async (req, res, next) => {
         res.json(messages);
     } catch (err) {
         console.error('Error processing chat message:', err);
-        next(err); // Forward error to the error handling middleware
+        next(err);
     }
 };
 

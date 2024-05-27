@@ -1,37 +1,51 @@
-const express = require('express');
+// viewMessageController.js
 const fs = require('fs');
-const { promisify } = require('util');
-const readFileAsync = promisify(fs.readFile);
+const util = require('util');
+const path = require('path');
+const readFileAsync = util.promisify(fs.readFile);
+const writeFileAsync = util.promisify(fs.writeFile);
 
-const viewMessageController = async function(req, res, next) {
-    try {
-        const data = await readFileAsync('json/message.json', 'utf8');
-        
-        if (!data.trim()) {
-            console.log('No data found in the file.');
-            return res.render('viewMessage', { messages: [] });
-        }
+const messageFilePath = path.join(__dirname, '../public/json/message.json');
 
-        const messages = JSON.parse(data);
+const viewMessageController = function(req, res) {
+    const io = res.locals.io;
 
-        // Check if the parsed data is an array and has content
-        if (!Array.isArray(messages) || messages.length === 0) {
-            console.log('No messages to display.');
-            return res.render('viewMessage', { messages: [] });
-        }
+    io.once('connection', (socket) => {
+        console.log('A user connected');
 
-        messages.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+        socket.once('disconnect', () => {
+            console.log('User disconnected');
+        });
 
-        res.render('viewMessage', { messages });
-    } catch (err) {
-        // Handle specific error if the file does not exist
-        if (err.code === 'ENOENT') {
-            console.error('File not found:', err);
-            return res.render('viewMessage', { messages: [] });
-        }
-        console.error('Error reading messages:', err);
-        return next(err);
-    }
+        socket.on('new_message', async (msg) => {
+            try {
+                const data = await readFileAsync(messageFilePath, 'utf8');
+                const messages = data.trim() ? JSON.parse(data) : [];
+                messages.push(msg);
+                await writeFileAsync(messageFilePath, JSON.stringify(messages, null, 2), 'utf8');
+                io.emit('receive_message', msg);
+            } catch (err) {
+                console.error('Failed to save message:', err);
+                socket.emit('error_message', 'Failed to save message');
+            }
+        });
+
+        // Send existing messages to just connected socket
+        const sendExistingMessages = async () => {
+            try {
+                const data = await readFileAsync(messageFilePath, 'utf8');
+                const messages = data.trim() ? JSON.parse(data) : [];
+                socket.emit('existing_messages', messages);
+            } catch (err) {
+                console.error('Error reading messages:', err);
+                socket.emit('error_message', 'Failed to load messages');
+            }
+        };
+
+        sendExistingMessages();
+    });
+
+    res.render('viewMessage');
 };
 
 module.exports = viewMessageController;

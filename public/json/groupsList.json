@@ -1,1 +1,23 @@
-[{"id":"d7ae85c6-a913-4d04-85c1-b7c67a5a06c8","name":"group2"},{"id":"bf38bc34-6dc6-4839-a19e-fd6a9ae608cc","name":"group3"}]
+[
+  {
+    "id": "b84c3554-880e-4ece-9e7a-c7c67bd6bddd",
+    "name": "2234",
+    "users": [
+      {
+        "id": "3@email.com"
+      },
+      {
+        "id": "5@email.com"
+      }
+    ]
+  },
+  {
+    "id": "597fac85-3898-4c1d-8873-ea210acfce40",
+    "name": "abcd",
+    "users": [
+      {
+        "id": "4@email.com"
+      }
+    ]
+  }
+]

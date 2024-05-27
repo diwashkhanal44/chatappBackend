@@ -10,7 +10,8 @@ router.get('/',controller.groupListController);
 router.post('/creategroup',controller.createGroupController);
 router.get('/deletegroup/:groupid',controller.deleteGroupController);
 router.get('/eachgroup/:groupId',controller.eachGroupMessageController);
-router.get('/adduser/:userid',controller.addUserController);
+router.post('/adduser',controller.addUserController);
+router.post('/postgroupmessages',controller.postGroupMessagesController);
 
 
 
